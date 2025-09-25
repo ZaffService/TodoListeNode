@@ -1,0 +1,75 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Taches {
+  id            Int      @id @default(autoincrement())
+  description   String
+  createAt      DateTime @default(now())
+  etat          Etat     @default(En_Cours)
+  image         String?
+  voiceMessage  String?  
+  startDate     DateTime?
+  endDate       DateTime?
+
+  userId Int
+  user   User @relation(fields: [userId], references: [id])
+
+  UserPermission PermissionUserTache[]
+
+  tacheModification HistoriqueModifTache[]
+}
+
+enum Etat {
+  Termine
+  En_Cours
+  En_Attente
+}
+
+enum Permission {
+  GET
+  PATCH
+  DELETE
+}
+
+model User {
+  id       Int    @id @default(autoincrement())
+  nom      String
+  login    String @unique
+  password String
+
+
+  Taches Taches[]
+
+  TachesPermission PermissionUserTache[]
+
+  tacheModification HistoriqueModifTache[]
+}
+
+model PermissionUserTache {
+  id         Int        @id @default(autoincrement())
+  permission Permission
+
+  userId Int
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  tacheId Int
+  tache   Taches @relation(fields: [tacheId], references: [id], onDelete: Cascade)
+}
+
+model HistoriqueModifTache {
+  id         Int        @id @default(autoincrement())
+  modifiedAt DateTime   @default(now())
+  action     Permission
+
+  userId Int
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  tacheId Int
+  taches  Taches @relation(fields: [tacheId], references: [id], onDelete: Cascade)
+}
